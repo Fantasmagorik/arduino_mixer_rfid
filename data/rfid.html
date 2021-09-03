@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<style type="text/css">
+			/* Setup */
+			input:invalid {
+			 border:2px solid red !important;
+			}
+			input:invalid + input[type=submit] {
+			 pointer-events:none;
+			 opacity:0.5;
+			}
+			.col-sm-offset-2 {
+			 background-color:#fff;
+			 box-shadow:0 12px 15px rgba(0, 0, 0, 0.4);
+			 padding:20px;
+			}
+
+			/* device */
+			.block {
+			 background-color:#fff;
+			 box-shadow:0 12px 15px rgba(0, 0, 0, 0.4);
+			 padding:20px;
+			 margin:20px;
+			 float:left;
+			}
+			@media (max-width:480px) {
+			 .block {
+			  margin:20px -15px;
+			 }
+			}
+			.history {
+			 background-color:#fff;
+			 box-shadow:0 12px 15px rgba(0, 0, 0, 0.4);
+			 padding:10px;
+			 margin:10px 0;
+			 display:block;
+			}
+			.header {
+			 background-color:#fff;
+			 box-shadow:0 22px 22px -22px gray;
+			 margin:0 -15px 23px;
+			 padding:1px 50px 15px;
+			 border-radius:10px 10px 0 0;
+			}
+			.device {
+			 background-color:#F5F5F5;
+			 box-shadow:0 5px 25px rgba(0, 0, 0, 0.4);
+			 border-radius:10px;
+			 margin-top:5%;
+			}
+			h5 {
+			 background-color:#4db6ac;
+			 color:#fff;
+			 margin-top:-40px;
+			 padding:10px 0;
+			 width:50%;
+			 text-align:center;
+			 text-transform:uppercase;
+			}
+			.add span {
+			 background-color:#c0c7ca;
+			 border-radius:100px;
+			 box-shadow:0 5px 25px rgba(0, 0, 0, 0.4);
+			 padding:0 20px;
+			}
+			.add {
+			 font-size:40px;
+			}
+			#date {
+				text-transform:capitalize;
+			}
+
+			/* loader */
+			.loader {
+				 border:15px solid #fff;
+				 border-top:15px solid #FF851B;
+				 border-radius:50%;
+				 width:70px;
+				 height:70px;
+				 animation:spin 1s linear infinite;
+				 margin-left:45%;
+			}
+			@keyframes spin {
+				 0% { transform:rotate(0deg); }
+				 100% { transform:rotate(360deg); }
+			}
+			ul#history {
+				 text-indent: .5em;
+				 border-left: .25em solid #c0c7ca;
+				 margin-left: 5px;
+			}
+			#history li {
+				margin-left: -31px;
+			}
+		</style>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<link rel="stylesheet" href="/bootstrap.min.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Project:Settings</title>
+		<script type="text/javascript">
+			function send_request(submit,server){
+				request = new XMLHttpRequest();
+				request.open("GET", server, true);
+				request.send();
+				save_status(submit,request);
+			}
+			function submit_disabled(request){
+				var inputs = document.getElementsByTagName("input");
+				for (var i = 0; i < inputs.length; i++) {
+					if (inputs[i].type === 'submit') {inputs[i].disabled = request;}
+				}
+			}
+			function save_status(submit,request){
+				old_submit = submit.value;
+				request.onreadystatechange = function() {
+					if (request.readyState != 4) 
+						return;
+					submit.value = request.responseText;
+					setTimeout(function(){
+						submit.value=old_submit;
+						submit_disabled(false);
+					}, 5000);
+				}
+				submit.value = 'Wait...';
+				submit_disabled(true);
+			}
+			function val(id){
+				var v = document.getElementById(id).value;
+				return v;
+			}
+			
+			
+			function reboot(submit,texts){
+				if (confirm(texts)) {
+					server = "/reboot?device=ok";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			
+			function resetuptime(submit,texts){
+				if (confirm(texts)) {
+					server = "/resetuptime";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			
+			function set_time_from_browser1 (submit){
+				server = "/syncTime?sec="+new Date().getSeconds()+"&min="+new Date().getMinutes()+"&hour="+new Date().getHours()+"&day="+new Date().getDay()+"&date="+new Date().getDate()
+				+"&mon="+new Date().getMonth()+"&year="+new Date().getFullYear();
+				send_request(submit,server);
+			}
+			
+			function set_time_from_browser (submit){
+				server = "/syncTime?now="+(new Date().getTime()/1000 - 20);
+				send_request(submit,server);
+			}
+			
+			var xmlHttp=createXmlHttpObject();
+			function createXmlHttpObject(){
+				if(window.XMLHttpRequest){
+					xmlHttp=new XMLHttpRequest();
+				}else{
+					xmlHttp=new ActiveXObject('Microsoft.XMLHTTP');
+				}
+				return xmlHttp;
+			}
+			function process(){
+				if(xmlHttp.readyState==0 || xmlHttp.readyState==4){
+					xmlHttp.open('PUT','RFIDxml',true);
+					xmlHttp.onreadystatechange=handleServerResponse;
+					xmlHttp.send(null);
+				}
+				setTimeout('process()',1000);
+			}
+			function handleServerResponse(){
+				if(xmlHttp.readyState==4 && xmlHttp.status==200){
+					xmlResponse=xmlHttp.responseXML;
+					xmldoc = xmlResponse.getElementsByTagName('pjN');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.title="Settings: " + message;
+					//document.getElementById('pjN').innerHTML=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('rfid1');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid1').innerHTML="<br>" + message;
+					xmldoc = xmlResponse.getElementsByTagName('rfid2');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid2').innerHTML="<br>" + message;
+					xmldoc = xmlResponse.getElementsByTagName('rfid3');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid3').innerHTML="<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('rfid4');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid4').innerHTML="<br>" + message;
+					xmldoc = xmlResponse.getElementsByTagName('rfid5');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid5').innerHTML="<br>" + message;
+					xmldoc = xmlResponse.getElementsByTagName('rfid6');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid6').innerHTML="<br>" + message;
+				
+					xmldoc = xmlResponse.getElementsByTagName('rfid7');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid7').innerHTML="<br>" + message;
+					xmldoc = xmlResponse.getElementsByTagName('rfid8');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid8').innerHTML="<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('card1');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('card2');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('card3');
+					message2 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('cards').innerHTML="<br>" + message + message1 + message2;
+					
+					xmldoc = xmlResponse.getElementsByTagName('board');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('board').innerHTML=message;
+				
+				}
+			}
+			function sendbutton(Pin){
+				server = '/diag?work=' + Pin;
+				request = new XMLHttpRequest();
+				request.open('GET', server, true);
+				request.send();
+			}
+		</script>
+	</head>
+	<body onload="process();" style='background-color:#E9F0F0;'>
+		<div class="container">
+			<div class="row" style="text-align:center;">
+				<h2 style="margin:30px;">Settings: <span id='prN'></h2>
+				<div class="col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
+					<h5 class="alert-info">Network: <span id='r'></span>&#8195;&#8195;<span id='r1'></span></h5>
+					<a class="btn btn-block btn-warning" href="/">Main page</a>
+					<hr>
+				  <div class="row">
+					  <div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 1    <strong><span id='rfid1'></span></strong></font></div>
+						</div>
+						<div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 2    <strong><span id='rfid2'></span></strong></font></div>
+						</div>
+						<div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 3    <strong><span id='rfid3'></span></strong></font></div>
+						</div>
+					  <div class="col-sm-12">
+					    <div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 4    <strong><span id='rfid4'></span></strong></font></div>
+						</div>
+						<div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 5    <strong><span id='rfid5'></span></strong></font></div>
+						</div>
+						<div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 6    <strong><span id='rfid6'></span></strong></font></div>
+						</div>
+					  <div class="col-sm-12">
+					    <div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 7    <strong><span id='rfid7'></span></strong></font></div>
+						</div>
+						<div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:0px;"><font size='4' color='black'>RFID place 8    <strong><span id='rfid8'></span></strong></font></div>
+						</div>
+						<div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:30px;"><font size='4' color='black'>current RFID beacons:    <strong><span id='cards'></span></strong></font></div>
+						</div>
+					    <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=0">write as 1</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=1">write as 2</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=2">write as 3</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=3">write as 4</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=4">write as 5</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=5">write as 6</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=6">write as 7</a>
+						  </div>
+						  <div class="col-sm-3">
+						  <a class="btn btn-block btn-warning" href="/webSetNewComb?setCombi=7">write as 8</a>
+						  </div>
+			      
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,230 @@
+ <!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<style type="text/css">
+			
+			.col-sm-offset-2 {
+			 background-color:#fff;
+			 box-shadow:0 12px 15px rgba(0, 0, 0, 0.4);
+			 padding:20px;
+			}
+			.alert-time {
+				background-color: #7badc5;
+				border-color: #BCE8F1;
+			}
+			.alert-custom {
+				  background-color: #eeeeee;
+				  border-color: #BCE8F1;
+			  }
+			/* loader */
+			.loader {
+				 border:15px solid #fff;
+				 border-top:15px solid #FF851B;
+				 border-radius:50%;
+				 width:70px;
+				 height:70px;
+				 animation:spin 1s linear infinite;
+				 margin-left:45%;
+			}
+			@keyframes spin {
+				 0% { transform:rotate(0deg); }
+				 100% { transform:rotate(360deg); }
+			}
+			ul#history {
+				 text-indent: .5em;
+				 border-left: .25em solid #c0c7ca;
+				 margin-left: 5px;
+			}
+			#history li {
+				margin-left: -31px;
+			}
+		</style>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<link rel="stylesheet" href="/bootstrap.min.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title></title>
+		<script type="text/javascript">
+			var xmlHttp=createXmlHttpObject();
+			function createXmlHttpObject(){
+				if(window.XMLHttpRequest){
+					xmlHttp=new XMLHttpRequest();
+				}else{
+					xmlHttp=new ActiveXObject('Microsoft.XMLHTTP');
+				}
+				return xmlHttp;
+			}
+			
+			function send_request(submit,server){
+				request = new XMLHttpRequest();
+				request.open("GET", server, true);
+				request.send();
+				save_status(submit,request);
+			}
+			function submit_disabled(request){
+				var inputs = document.getElementsByTagName("input");
+				for (var i = 0; i < inputs.length; i++) {
+					if (inputs[i].type === 'submit') {inputs[i].disabled = request;}
+				}
+			}
+			function save_status(submit,request){
+				old_submit = submit.value;
+				request.onreadystatechange = function() {
+					if (request.readyState != 4) 
+						return;
+					submit.value = request.responseText;
+					setTimeout(function(){
+						submit.value=old_submit;
+						submit_disabled(false);
+					}, 200);
+				}
+				submit.value = 'Подождите...';
+				submit_disabled(true);
+			}
+			function val(id){
+				var v = document.getElementById(id).value;
+				return v;
+			}
+			
+			function win(submit,texts){
+				if (confirm(texts)) {
+					server = "/win";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function set(submit,texts){
+				if (confirm(texts)) {
+					server = "/set";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function restart(submit,texts){
+				if (confirm(texts)) {
+					server = "/restart";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function process(){
+				if(xmlHttp.readyState==0 || xmlHttp.readyState==4){
+					xmlHttp.open('PUT','xml',true);
+					xmlHttp.onreadystatechange=handleServerResponse;
+					xmlHttp.send(null);
+				}
+				setTimeout('process()',1000);
+			}
+			
+			function handleServerResponse(){
+				if(xmlHttp.readyState==4 && xmlHttp.status==200){
+					xmlResponse=xmlHttp.responseXML;
+					xmldoc = xmlResponse.getElementsByTagName('wT');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('wT').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('pjN');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('pjN').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('prN');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('prN').innerHTML=message;
+					document.title=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('cntWiFiErr');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('cntWiFiErr').innerHTML=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('cntMQTTErr');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('cntMQTTErr').innerHTML=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('date');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('date').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('time');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('time').innerHTML=message;	
+					xmldoc = xmlResponse.getElementsByTagName('card1');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid1').innerHTML=message;
+				
+					xmldoc = xmlResponse.getElementsByTagName('card2');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid2').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('card3');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('rfid3').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('cntWin');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('cntWin').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('status');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('status').innerHTML=message;
+					
+				}
+			}
+			
+			
+			
+		</script>
+	<link rel="icon" href="/home1.png" />
+	</head>
+	<body onload="process();" style='background-color:#E9F0F0;'>
+		<div class="container">
+			<div class="row" style="text-align:center;">
+				<h2 style="margin:30px;" ><span id='prN'></h2>
+				<div class="col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
+					<div class="col-sm-12">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'> <strong><span id='pjN'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-12">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Build: <strong><span id='date'></span>  <span id='time'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-6">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>cntWiFiErr: <strong><span id='cntWiFiErr'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-6">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>cntMQTTErr: <strong><span id='cntMQTTErr'></span></strong></font></div>
+				  </div>
+					<div class="col-sm-6">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>UpTime: <strong><span id='wT'></span></strong></font></div>
+				  </div>
+          <div class="col-sm-6">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>Status: <strong><span id='status'/span></strong></font></div>
+				  </div>
+				  <div class="col-sm-12">
+				  <div class="col-sm-10">
+							<div class="alert  alert-info" style="margin:15px;margin-left:90px;"><font size='4' color='black'>Spot 1: <strong><span id='rfid1'/span></strong></font></div>
+				  </div>
+				  <div class="col-sm-10">
+							<div class="alert  alert-info" style="margin:15px;margin-left:90px;"><font size='4' color='black'>Spot 2: <strong><span id='rfid2'/span></strong></font></div>
+				  </div>
+				  <div class="col-sm-10">
+							<div class="alert  alert-info" style="margin:15px;margin-left:90px;"><font size='4' color='black'>Spot 3: <strong><span id='rfid3'/span></strong></font></div>
+				  </div>
+				  <div class="col-sm-12"> 
+				    <div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>win combo cnt: <strong><span id='cntWin'/span></strong></font></div>
+				  </div>
+				  </div>
+					<div class="col-sm-12"> 
+					  <input class="btn btn-block btn-danger" value="WIN" onclick="win(this,'ARE YOU SURE?');" type="submit">
+					  <input class="btn btn-block btn-danger" value="RESTART" onclick="restart(this,'ARE YOU SURE?');" type="submit">
+					  <a class="btn btn-block btn-primary" href="/rfid.htm">RFID info page</a>
+					  <a class="btn btn-block btn-primary" href="/device.htm">Settings page</a>
+			    </div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
